@@ -1,0 +1,26 @@
+#!/bin/bash
+
+FILE_PATH=$(echo $(cd $(dirname "$0") && pwd -P)/$(basename "$0"))
+BASEDIR=$(dirname "${FILE_PATH}")
+
+serial=$(grep 'Serial' /proc/cpuinfo | sed 's/\t//g' | sed 's/\s//g' | sed 's/Serial://')
+
+echo "update current system software ..."
+cd ${BASEDIR}
+echo "sudo git checkout -f && git clean -fx -d && git checkout master && git pull origin master"
+sudo git checkout -f && sudo git clean -fx -d && sudo git checkout master && sudo git pull origin master
+
+echo "generate device key pair ..."
+sudo rm /root/.ssh/id_rsa /root/.ssh/id_rsa.pub
+sudo ssh-keygen -f /root/.ssh/id_rsa -N '' -C ${serial}@flhomebox
+
+echo -e "\n\n\n\n\n\n\nNOTE: please register the following device public key in github\n"
+sudo cat /root/.ssh/id_rsa.pub
+echo ""
+
+read -p "Press any key to do device factory reset" input
+if [ -f "${BASEDIR}/utils/factory_reset" ]; then
+    echo "start factory reset process ..."
+    ${BASEDIR}/utils/factory_reset
+fi
+
